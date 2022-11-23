@@ -1,8 +1,9 @@
 
 # 编译后运行
-## 开发阶段编译
+## 开发阶段编译debug
 ```bash
-# 编译 并 运行发送post命令， 默认cargo build 编译出来的二进制，在项目根目录的 target/debug
+# 编译 并 运行发送post命令
+# 默认cargo build 编译出来的二进制，在项目根目录的 target/debug
 cargo build 
 
 # 进入debug目录
@@ -12,7 +13,7 @@ cd ../target/debug/
 ./http-cli post https://httpbin.org/post a=1 b=2
 
 # get命令
-./http-cli get http://abc.xyz
+./http-cli get https://time.geekbang.org/
 
 ```
 
@@ -29,7 +30,7 @@ cd ../target/release
 ./http-cli post https://httpbin.org/post a=1 b=2
 
 # get命令
-./http-cli get http://abc.xyz
+./http-cli get https://time.geekbang.org/
 
 ```
 # 使用cargo run
