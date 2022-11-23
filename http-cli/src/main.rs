@@ -1,5 +1,3 @@
-// 参考 https://github.com/tyrchen/geektime-rust/tree/master/04_httpie
-
 use std::{str::FromStr, collections::HashMap};
 use clap::Parser;
 use anyhow::{anyhow, Result};

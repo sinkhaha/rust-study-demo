@@ -1,4 +1,9 @@
 
+# 背景
+用rust实现一个cli工具
+* 解析命令行的get和post命令，验证用户的输入
+* 解析后发送http请求，输出响应到命令行
+  
 # 编译后运行
 ## 开发阶段编译debug
 ```bash
@@ -43,3 +48,6 @@ cargo run -- post https://httpbin.org/post a=1 b=2
 ```bash
 cargo test
 ```
+
+# 参考 
+* https://github.com/tyrchen/geektime-rust/tree/master/04_httpie
