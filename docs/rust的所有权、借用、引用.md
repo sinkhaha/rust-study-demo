@@ -56,7 +56,11 @@ fn sum(data: Vec<u32>) -> u32 {
 }
 ```
 
-// TODO 补一张所有权转移的图
+
+
+如下图：
+
+![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/node_source/%E6%89%80%E6%9C%89%E6%9D%83%E8%BD%AC%E7%A7%BB-1.png)
 
 
 
@@ -88,7 +92,11 @@ fn sum(data: Vec<u32>) -> u32 {
 }
 ```
 
-// TODO 补充一张clone后堆上数据的图
+如下图：堆上的数据也会复制一份
+
+
+
+![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/node_source/clone-1.png)
 
 
 
@@ -108,10 +116,6 @@ struct Test(i32, i32);
 如果值的类型实现了Copy trait，当要移动一个值时(如赋值、传参、函数返回)，值会自动**按位拷贝（浅拷贝）**，否则就是使用Move进行所有权移动。
 
 > 例如以上的错误示例，data 的类型 Vec<i32>，它没有实现 Copy trait，在赋值或者函数调用时无法 Copy，于是就按默认使用 Move 语义。而 Move 之后，原先的变量 data 无法访问，所以出错。
-
-
-
-// TODO copy后堆上的数据是怎么表示的
 
 
 
