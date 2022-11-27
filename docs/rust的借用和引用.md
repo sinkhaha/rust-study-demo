@@ -18,7 +18,7 @@
 
 
 
-**Rust的引用其实就是指针，是指向其他数据的一个指针或一个胖指针(有额外元数据的指针)**，它的值是内存地址。
+**Rust的引用其实就是指针，是指向特定类型数据的一个指针或一个胖指针(有额外元数据的指针)**，它的值是内存地址。
 
 > 例如`&123`表示的是一个指向数据值123的一个指针
 
@@ -233,6 +233,10 @@ fn main() {
 }
 ```
 
+
+
+
+
 #### 用法2：用ref mut表示
 
 ```rust
@@ -252,9 +256,15 @@ fn main() {
 
 ## 2. 借用
 
-借用：即 &符号用在表达式上，如`let b = &a; `，此时`&a`表示借用a，这是一个动作，它的结果是得到一个引用类型，所以b是引用类型
+### 用法
+
+借用：即 &符号用在表达式上，如`let b = &a; `，此时`&a`表示借用a，这是一个动作，它的结果是得到一个引用类型，所以b是引用类型。
 
 > 此处可以把&理解为C++的指针
+
+**默认情况下，Rust 的借用都是只读的**。
+
+一个值可以有多个只读引用。
 
 ```rust
 fn main() {
@@ -288,6 +298,99 @@ fn sum(a: &i32, b: &i32) -> i32 {
     a + b
 }
 ```
+
+
+
+### 借用的约束
+
+借用对值的引用的约束：借用不能超过值的生命周期。
+
+```rust
+// 正确用法
+fn main() {
+    let data = vec![1, 2, 3, 4];
+    // data的生命周期是main函数结束，sum函数处于main的下一层调用栈中，所以sum调用结束后main函数还会继续执行，所以在 main() 函数中定义的 data 生命周期要比 sum() 中对 data 的引用要长，这样不会有任何问题
+    println!("sum of data1: {}", sum(&data));
+}
+
+fn sum(data: &Vec<u32>) -> u32 {
+    data.iter().fold(0, |acc, x| acc + x)
+}
+```
+
+
+
+```rust
+// 错误用法，编译不通过
+fn main() {
+    // 生命周期更长的 main() 函数变量 r ，引用了生命周期更短的 local_ref() 函数里的局部变量a
+    let r = local_ref();
+    println!("r: {:p}", r);
+}
+
+fn local_ref<'a>() -> &'a i32 {
+    let a = 42;
+    &a // 报错，因为这里返回a的引用，a是局部变量，生命周期比调用方短
+}
+```
+
+
+
+## 3. rust的限制
+
+为了保证内存安全，Rust 对可变引用的使用也做了严格的约束：
+
+1. 在一个作用域内，仅允许一个活跃的可变引用。
+
+   > 所谓活跃，就是真正被使用来修改数据的可变引用，如果只是定义了，却没有使用或者当作只读引用使用，不算活跃。
+
+2. 在一个作用域内，活跃的可变引用（写）和只读引用（读）是互斥的，不能同时存在。
+
+   > 不要交叉使用 可变引用 和 只读引用
+
+   
+
+如以下代码会报错，此时存在多个可变引用
+
+```rust
+fn main() {
+    let mut s = String::from("hello");
+
+    let r1 = &mut s;
+    let r2 = &mut s; // 报错，多s创建了两个引用
+
+    println!("{}, {}", r1, r2);
+}
+```
+
+以下代码也会报错，此时存在可变引用和只读引用
+
+```rust
+fn main() {
+    let mut s = String::from("hello");
+
+    let r1 = &s;
+    let r2 = &s;
+    let r3 = &mut s; // 注意是可变引用
+
+    // 这里会报错，因为r1和r2是只读引用，r3的声明在输出r1和r2前面，r3可能会改变s，有可能涉及到s内存的重新分配，这是不安全的
+    println!("{}, {}, and {}", r1, r2, r3); 
+}
+
+// 可改成以下正确写法
+fn main() {
+    let mut s = String::from("hello");
+
+    let r1 = &s;
+    let r2 = &s;
+    println!("{}, {}", r1, r2); // 先输出了可读引用
+
+    let r3 = &mut s;
+    println!("{}", r3);
+}
+```
+
+
 
 
 
@@ -339,6 +442,84 @@ fn main() {
     println!("a: {} b: {}", a, b); // a: 666 b: 666 
 }  
 ```
+
+
+
+## 自动解引用
+
+Rust绝大多数时候不会自动地解除引用。但在某些环境下，Rust会自动进行解引用。
+
+自动解引用的情况有
+
+1. 使用`.`操作符时(包括取属性值和方法调用)，会隐式地尽可能解除或创建多层引用
+
+   > Rust会自动分析func()的参数，并在需要的时候自动创建或自动解除引用。例如以`abc.func()`有可能会自动转换为`&abc.func()`，反之，`&abc.func()`也有可能会自动转换为`abc.func()`
+
+2. 使用比较操作符时，若比较的两边是相同类型的引用，则会自动解除引用到它们的值然后比较
+
+   > 例如有引用类型的变量n，那么`n > &30`和`*n > 30`的效果是一样的
+
+
+
+例子：
+
+```rust
+// 使用 .操作符 自动解引用的例子
+struct Person {
+  first_name: String,
+  last_name: String,
+  age: u8
+}
+
+fn main() {
+  let pascal = Person {
+    first_name: "san".to_string(),
+    last_name: "zhang".to_string(),
+    age: 28
+  };
+
+  let r = &pascal; //r是&Person类型
+
+  // r.first_name自动解引用，不然得这样子写 (*r).first_name
+  println!("Hello, {}!", r.first_name);
+}
+```
+
+
+
+```rust
+// 使用 .操作符 自动创建引用的例子
+fn main() {
+    let mut numbers = [3, 1, 2];
+    // 数组的sort()方法需要一个&mut self，.操作符会隐式地对左边的操作符借用一个引用
+    // 此时 .sort()等价于 (&mut numbers).sort();
+    numbers.sort();
+
+    println!("{:?}", numbers);
+}
+```
+
+
+
+```rust
+
+fn main() {
+    let n = &123;
+    // .操作符自动解引用，等价于 *n > 30
+    if n > &30 {
+        println!("{}", n); // 123
+    }
+    
+    // 正常写法，自己手动解引用
+    if *n > 30 {
+        println!("{}", n); // 123
+    }
+}
+```
+
+
+
+
 
 
 
@@ -472,4 +653,5 @@ fn main() {
 * https://rust-book.junmajinlong.com/ch3/07_reference_type.html
 * https://time.geekbang.org/column/article/415988
 * https://juejin.cn/post/6844904106310516744
+* https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html
 
