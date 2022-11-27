@@ -115,7 +115,24 @@ struct Test(i32, i32);
 
 如果值的类型实现了Copy trait，当要移动一个值时(如赋值、传参、函数返回)，值会自动**按位拷贝（浅拷贝）**，否则就是使用Move进行所有权移动。
 
-> 例如以上的错误示例，data 的类型 Vec<i32>，它没有实现 Copy trait，在赋值或者函数调用时无法 Copy，于是就按默认使用 Move 语义。而 Move 之后，原先的变量 data 无法访问，所以出错。
+
+
+例如下面的错误示例，data 的类型 Vec<i32>，它没有实现 Copy trait，在赋值或者函数调用时无法 Copy，于是就按默认使用 Move 语义。而 Move 之后，原先的变量 data 无法访问，所以出错。
+
+```rust
+fn main() {
+    let data = vec![1, 2, 3, 4];
+    let data1 = data; // data的所有权转移给了data1，在这之后就不能访问data变量了
+
+    println!("sum of data1: {}", sum(data1)); // data1的所有权转移给了sum函数的data变量
+    println!("sum of data: {:?}", data); // 报错，因为data的所有权转移给了data1，不能再访问data
+    println!("data1: {:?}", data1); // 报错，因为data1的所有权转移到了sum函数的data变量了，不能再访问data1
+}
+
+fn sum(data: Vec<u32>) -> u32 {
+    data.iter().fold(0, |acc, x| acc + x)
+}
+```
 
 
 
@@ -141,7 +158,7 @@ struct test(i32, i32);
 
 
 
-**Copy和Clone时的区别**
+## Clone和Copy的区别
 
 当Copy和Clone都是rust的默认实现时(不考虑自己实现Copy trait和Clone trait的情况)：
 
@@ -154,19 +171,23 @@ struct test(i32, i32);
 
 
 
-## borrowing借用
+## Borrowing借用
 
 ### 用法
 
 借用：即 `&符号用`在表达式上
 
-> 如`let b = &a; `，此时`&a`表示借用a，这是一个借用动作，它的结果是得到一个引用类型，所以b是引用类型
+> 如`let b = &a; `，此时`&a`表示借用a，这是一个借用动作，它的结果是得到一个引用类型，所以b是引用类型；
 
 > 此处可以把&理解为C++的指针
 
 
 
-**默认情况下，Rust 的借用都是只读的**。一个值可以有多个只读引用。
+**默认情况下，Rust 的借用都是只读的，一个值可以有多个只读引用。**
+
+
+
+**只读引用实现了 Copy trait，也就意味着引用的赋值、传参都会产生新的浅拷贝。**
 
 
 
@@ -240,9 +261,9 @@ fn local_ref<'a>() -> &'a i32 {
 
 
 
-# 引用类型
+# 引用类型 和 引用
 
-**引用类型是一种数据类型，它所保存的值是一个引用。引用类型可以分为 引用类型 和 可变引用类型。**
+**引用类型：是一种数据类型，它所保存的值是一个引用。引用类型可以分为 引用类型 和 可变引用类型。**
 
 * `&T`：表示类型T的引用类型， 是一个对于 T 的「不可变引用」（immutable reference）或者「常量引用」（const reference），也叫共享引用，意味着可能存在对同一个值的其它引用，也许是在别的线程或是当前线程的调用栈中
 
@@ -250,17 +271,11 @@ fn local_ref<'a>() -> &'a i32 {
 
 
 
-**Rust的引用其实就是指针，是指向特定类型数据的一个指针或一个胖指针(有额外元数据的指针)**，它的值是内存地址。
+**引用：其实就是指针，是指向特定类型数据的一个指针或一个胖指针(有额外元数据的指针)**，**它的值是内存地址**。**引用可以指向内存中任何地方的值，不仅仅是栈上的。**
 
-> 例如`&123`表示的是一个指向数据值123的一个指针
+> 例如`&123`表示的是一个指向数据值123的一个指针。打印一个`i32`变量，结果是这个变量的值；同理，打印一个引用，结果就是引用的值：它表示指向的变量的内存地址。
 
-> 打印一个`i32`变量，结果是这个变量的值；同理，打印一个引用，结果就是引用的值：它表示指向的变量的内存地址。
->
 > 如果要打印一个引用本身的地址，就要对引用再加上一层引用，如打印引用(&a)的地址，要打印`&&a`才行。
-
-
-
-**引用可以指向内存中任何地方的值，不仅仅是栈上的。**
 
 
 
@@ -554,6 +569,69 @@ fn main() {
 
 
 
+## （4）引用例子分析
+
+分析以下例子各输出什么
+
+```rust
+fn main() {
+    let data = vec![1, 2, 3, 4]; // Vec<u32>类型是动态大小，存储在堆中
+
+    let data1 = &data;
+    let data2 = &data;
+    // 值的地址是什么？引用的地址又是什么？
+
+    // 以下3个输出的都是 堆的地址
+    // &data就是"data的胖指针ptr的值"，该指针指向堆的地址，所以&data就是堆的地址
+    // data1和data2都指向了&data，所以也是堆地址
+    println!("data引用的地址: {:p}", &data); // 0x7ff7b1bf6628
+    println!("data1的值: {:p}", data1); // 0x7ff7b1bf6628
+    println!("data2的值: {:p}", data2); // 0x7ff7b1bf6628
+
+    // data1是一个引用类型，&data1就是输出`引用data1`的地址
+    println!("`引用data1`的地址: {:p}", &data1); // 0x7ff7b4968640
+    println!("`引用data2`的地址: {:p}", &data2); // 0x7ff7b4968648
+
+    println!("`data引用`的引用: {:p}", &&data); // 0x7ff7b49687f0
+
+    println!("sum of data1: {}", sum(data1)); // 10
+
+    // 堆上各个数据的地址
+    // [0x7f9581705e70, 0x7f9581705e74, 0x7f9581705e78, 0x7f9581705e7c]
+    println!(
+        "每个元素的地址 [{:p}, {:p}, {:p}, {:p}]",
+        &data[0], &data[1], &data[2], &data[3]
+    );
+}
+
+fn sum(data3: &Vec<u32>) -> u32 {
+    // data3指向了&data，所以也是堆地址
+    println!("data3的值 {:p}", data3); // 0x7ff7b9eed628
+    println!("`引用data3的地址` {:p}", &data3); // 0x7ff7b9eed430
+    // data3引用解指针，其实就是data3的值，也就是堆地址
+    println!("data3引用解指针，堆地址 {:p}", *&data3); // 0x7ff7b9eed628
+
+    data3.iter().fold(0, |acc, x| acc + x)
+}
+
+```
+
+分析如下图：
+
+![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/node_source/%E5%BC%95%E7%94%A8%E7%9A%84%E5%A0%86%E6%A0%88%E5%9C%B0%E5%9D%80.png)
+
+* data的值是[1,2,3,4]
+
+* data的ptr指针存的是堆的地址 0x7ff7b9eed628，指向堆
+
+* data1、data2和data3都是data的引用(用&data表示)，它们的ptr指针指向data的ptr指针，存的也是堆的地址0x7ff7b9eed628
+
+  > &data就是data的引用，它的值就是data的地址，即为"data的胖指针ptr的值"，该指针指向堆的地址，所以&data就是堆的地址；
+  >
+  > 这里data有很多只读引用指向它，但堆上的数据依旧只有 data 一个所有者，所以值的任意多个引用并不会影响所有权的唯一性
+
+
+
 # 解引用
 
 解引用：表示解除引用，即**通过引用获取到该引用所指向的原始值**。可以用*表示，也可以用 “&绑定变量”表示
@@ -678,47 +756,6 @@ fn main() {
     println!("{:?}", numbers);
 }
 ```
-
-
-
-# 堆栈数据分析例子
-
-```rust
-fn main() {
-    let data = vec![1, 2, 3, 4]; // Vec<u32>类型是动态大小，存储在堆中
-    let data1 = &data;
-    let data2 = &data;
-    // 值的地址是什么？引用的地址又是什么？
-
-    // &data是 Vec<u32>堆数据的地址
-    // data1是引用类型，data1的值是data的地址，所以也是 Vec<u32>堆数据的地址；data2同data1
-    // &data1是data1这个变量本身在栈上的地址
-    // &&data是“&data引用”的引用
-    // &*data，即先*data是解指针，即得到堆的数据，然后加上&表示引用
-    println!(
-        "addr of value: {:p}({:p})({:p}), {:p}, addr of data {:p}, data1: {:p}",
-        &data, data1, data2, &&data, &*data, &data1, 
-    );
-    println!("sum of data1: {}", sum(data1));
-
-    // 堆上数据的地址是什么？
-    println!(
-        "addr of items: [{:p}, {:p}, {:p}, {:p}]",
-        &data[0], &data[1], &data[2], &data[3]
-    );
-}
-
-fn sum(data: &Vec<u32>) -> u32 {
-    // 值的地址会改变么？引用的地址会改变么？
-    // data是“data引用”即&data的地址
-    // &data是“data引用”的引用，即“data引用”(&data)的地址
-    // *&data：即“&data”的解引用，&data的值是Vec堆数据的地址
-    println!("addr of value: {:p}, addr of ref: {:p}, {:p}", data, &data, *&data);
-    data.iter().fold(0, |acc, x| acc + x)
-}
-```
-
-// TODO 堆栈图
 
 
 
