@@ -1,14 +1,14 @@
-# 借用
+# 所有权
 
-## 前置知识：所有权
+## 解决的问题
 
-rust的所有权：是为了限制堆上数据的多重引用，解决了谁真正拥有数据的生杀大权问题。
+所有权是为了限制堆上数据的多重引用，解决了谁真正拥有数据的生杀大权问题。
 
 
 
-rust的所有权规则可以总结如下：
+## 所有权的规则
 
-* 一个值只能被一个变量所拥有，这个变量被称为所有者（值的所有者是某个变量）
+* 一个值只能被一个变量所拥有，这个变量被称为所有者（即 值的所有者是某个变量）
 
 * 一个值同一时刻只能有一个所有者，即不能有两个变量拥有相同的值。
 
@@ -20,27 +20,27 @@ rust的所有权规则可以总结如下：
 
 
 
-**谁是谁的所有者**
+## 所有者的判断
+
+如下语句，谁是谁的所有者？
 
 ```rust
 let s = String::from("hello");
 ```
 
-多数人可能会误以为变量s是堆中字符串数据`hello`的所有者，但实际上不是。
+> 多数人可能会误以为变量s是堆中字符串数据`hello`的所有者，但实际上并不是。
 
 
 
-String字符串的实际数据在堆中，但是String大小不确定，所以在栈中使用一个胖指针结构来表示这个String类型的数据，这个胖指针中的指针指向堆中的String实际数据。也就是说，**变量s的值是那个胖指针，而不是堆中的实际数据。**
+**实际上，变量s是栈中胖指针的所有者，而不是堆中实际数据的所有者。**
+
+因为String字符串的实际数据在堆中，但是String大小不确定，所以在栈中使用一个胖指针结构来表示这个String类型的数据，这个胖指针中的指针指向堆中的String实际数据。也就是，**变量s的值是那个胖指针，而不是堆中的实际数据。**
+
+> 但是，由于胖指针是指向堆中数据的，多数时候为了简化理解简化描述方式，也经常会说s是那个堆中实际数据的所有者
 
 
 
-**因此，变量s是那个胖指针的所有者，而不是堆中实际数据的所有者。**
-
-但是，由于胖指针是指向堆中数据的，多数时候为了简化理解简化描述方式，也经常会说s是那个堆中实际数据的所有者。但无论如何描述，需要理解所有者和值之间的真相。
-
-
-
-**所有权的转移**
+## 所有权的转移(move)
 
 ```rust
 // 错误用法
@@ -62,7 +62,7 @@ fn sum(data: Vec<u32>) -> u32 {
 
 
 
-Rust 考虑到了这一点，提供了两种方案：
+## 怎么避免所有权转移
 
 1. 克隆数据
 2. 如果你不希望值的所有权被转移，在 Move 语义外，Rust 提供了 Copy 语义。如果一个数据结构实现了 Copy trait，那么它就会使用 Copy 语义。这样，在你赋值或者传参时，值会自动按位拷贝（浅拷贝）。
@@ -70,9 +70,9 @@ Rust 考虑到了这一点，提供了两种方案：
 
 
 
-**克隆数据**
+### 克隆数据
 
-虽然实现Copy Trait可以让原变量继续拥有自己的值，但在某些需求下，不便甚至不能去实现Copy。这时如果想要继续使用原变量，可以使用`clone()`方法手动拷贝变量的数据，同时不会让原始变量变回未初始化状态。
+想要继续使用原变量，可使用`clone()`方法手动拷贝变量的数据，同时不会让原始变量变回未初始化状态。
 
 ```rust
 fn main() {
@@ -107,26 +107,22 @@ struct Test(i32, i32);
 
 
 
+### Copy trait
 
+如果值的类型实现了Copy trait，当你要移动一个值时(如赋值、传参、函数返回)，值会自动**按位拷贝**，否则就是使用Move进行移动。
 
-**Copy trait**
-
-符合 Copy 语义的类型，在你赋值或者传参时，值会自动按位拷贝。
-
-当你要移动一个值，如果值的类型实现了 Copy trait，就会自动使用 Copy 语义进行拷贝，否则使用 Move 语义进行移动。
-
-> data 的类型 Vec没有实现 Copy trait，在赋值或者函数调用的时候无法 Copy，于是就按默认使用 Move 语义。而 Move 之后，原先的变量 data 无法访问，所以出错。
+> 例如以上的错误示例，data 的类型 Vec<i32>，它没有实现 Copy trait，在赋值或者函数调用时无法 Copy，于是就按默认使用 Move 语义。而 Move 之后，原先的变量 data 无法访问，所以出错。
 
 
 
-总结一下rust哪些数据结构实现了 Copy trait：
+**rust哪些数据结构实现了Copy trait：**
 
-1. 原生类型，包括函数、不可变引用和裸指针实现了 Copy；
-2. 数组和元组，如果其内部的数据结构实现了 Copy，那么它们也实现了 Copy；
-3. 可变引用没有实现 Copy；
-4. 非固定大小的数据结构，没有实现 Copy。
+1. 原生类型，包括函数、不可变引用和裸指针实现了 Copy
+2. 数组和元组，如果其内部的数据结构实现了 Copy，那么它们也实现了 Copy
+3. 可变引用没有实现 Copy
+4. 非固定大小的数据结构，没有实现 Copy
 
-参考 https://doc.rust-lang.org/std/marker/trait.Copy.html
+> 也可参考 [官方文档介绍Copy trait](https://doc.rust-lang.org/std/marker/trait.Copy.html)
 
 
 
@@ -139,7 +135,9 @@ struct test(i32, i32);
 
 
 
-要注意Copy和Clone时的区别，如果不考虑自己实现Copy trait和Clone trait，而是使用它们的默认实现，那么：
+**Copy和Clone时的区别**
+
+如果不考虑自己实现Copy trait和Clone trait，而是使用它们的默认实现，那么：
 
 - Copy时，只拷贝变量本身的值，如果这个变量指向了其它数据，则不会拷贝其指向的数据
 - Clone时，拷贝变量本身的值，如果这个变量指向了其它数据，则也会拷贝其指向的数据
@@ -150,15 +148,19 @@ struct test(i32, i32);
 
 
 
-## 借用的用法
+### 借用
+
+#### 借用的用法
 
 借用：即 &符号用在表达式上，如`let b = &a; `，此时`&a`表示借用a，这是一个动作，它的结果是得到一个引用类型，所以b是引用类型。
 
 > 此处可以把&理解为C++的指针
 
-**默认情况下，Rust 的借用都是只读的**。
 
-一个值可以有多个只读引用。
+
+**默认情况下，Rust 的借用都是只读的**。一个值可以有多个只读引用。
+
+
 
 ```rust
 fn main() {
@@ -195,9 +197,9 @@ fn sum(a: &i32, b: &i32) -> i32 {
 
 
 
-## 借用的约束
+#### 借用的约束
 
-借用对值的引用的约束：借用不能超过值的生命周期。
+对值的引用的约束：借用不能超过值的生命周期
 
 ```rust
 // 正确用法
@@ -255,6 +257,8 @@ fn local_ref<'a>() -> &'a i32 {
 > 打印一个`i32`变量，结果是这个变量的值；同理，打印一个引用，结果就是引用的值：它表示指向的变量的内存地址。
 >
 > 如果要打印一个引用本身的地址，就要对引用再加上一层引用，如打印引用(&a)的地址，要打印`&&a`才行。
+
+
 
 引用可以指向内存中任何地方的值，不仅仅是栈上的。
 
@@ -484,8 +488,6 @@ fn main() {
 
 
 
-
-
 ## （3）rust引用的限制
 
 为了保证内存安全，Rust 对可变引用的使用也做了严格的约束：
@@ -667,46 +669,6 @@ fn main() {
 
 
 
-
-
-
-
-# 一些含义
-
-```rust
-// 含义：a绑定到字符串资源A上，拥有资源A的所有权
-let a = "xxx".to_string();　　
-
-// 含义：a绑定到字符串资源A上，拥有资源A的所有权，同时a还可绑定到新的资源上面去（更新绑定的能力，但新旧资源类型要同）；
-let mut a = "xxx".to_string();　
-
-// 含义：a绑定的资源A转移给b，b拥有这个资源A
-let b = a;
-
-// 含义：a绑定的资源A借给b使用，b只有资源A的读权限
-let b = &a;
-
-// 含义：a绑定的资源A借给b使用，b有资源A的读写权限
-let b = &mut a;
-
-// 含义：a绑定的资源A借给b使用，b有资源A的读写权限。同时，b可绑定到新的资源上面去（更新绑定的能力
-let mut b = &mut a;
-
-//含义：传参的时候，实参d绑定的资源D的所有权转移给c
-fn do(c: String) {}　
-
-// 含义：传参的时候，实参d将绑定的资源D借给c使用，c对资源D只读
-fn do(c: &String) {}　
-
-// 含义：传参的时候，实参d将绑定的资源D借给c使用，c对资源D可读写
-fn do(c: &mut String) {}
-
-// 含义：传参的时候，实参d将绑定的资源D借给c使用，c对资源D可读写。同时，c可绑定到新的资源上面去（更新绑定的能力）
-fn do(mut c: &mut String) {}　
-```
-
-
-
 # 例子
 
 ```rust
@@ -744,9 +706,47 @@ fn sum(data: &Vec<u32>) -> u32 {
 }
 ```
 
+// TODO 内存图
+
 
 
 # 总结
+
+## 一些含义
+
+```rust
+// 含义：a绑定到字符串资源A上，拥有资源A的所有权
+let a = "xxx".to_string();　　
+
+// 含义：a绑定到字符串资源A上，拥有资源A的所有权，同时a还可绑定到新的资源上面去（更新绑定的能力，但新旧资源类型要同）；
+let mut a = "xxx".to_string();　
+
+// 含义：a绑定的资源A转移给b，b拥有这个资源A
+let b = a;
+
+// 含义：a绑定的资源A借给b使用，b只有资源A的读权限
+let b = &a;
+
+// 含义：a绑定的资源A借给b使用，b有资源A的读写权限
+let b = &mut a;
+
+// 含义：a绑定的资源A借给b使用，b有资源A的读写权限。同时，b可绑定到新的资源上面去（更新绑定的能力
+let mut b = &mut a;
+
+//含义：传参的时候，实参d绑定的资源D的所有权转移给c
+fn do(c: String) {}　
+
+// 含义：传参的时候，实参d将绑定的资源D借给c使用，c对资源D只读
+fn do(c: &String) {}　
+
+// 含义：传参的时候，实参d将绑定的资源D借给c使用，c对资源D可读写
+fn do(c: &mut String) {}
+
+// 含义：传参的时候，实参d将绑定的资源D借给c使用，c对资源D可读写。同时，c可绑定到新的资源上面去（更新绑定的能力）
+fn do(mut c: &mut String) {}　
+```
+
+
 
 ## 不同情况下的&含义
 
@@ -801,16 +801,13 @@ fn main() {
 
 # 参考 
 
-* https://blog.csdn.net/hbuxiaofei/article/details/108471806
-* https://blog.csdn.net/quicmous/article/details/120489008
-* https://www.jianshu.com/p/ac519d8c5ec9
-* https://zhuanlan.zhihu.com/p/59998584
-* https://zhuanlan.zhihu.com/p/88926962
-*  https://course.rs/basic/ownership/borrowing.html
-*  https://zhuanlan.zhihu.com/p/149850061
-* https://rust-book.junmajinlong.com/ch3/07_reference_type.html
-* https://juejin.cn/post/6844904106310516744
-* https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html
-
+* [The Rust Programming Language](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
+* [【翻译】Rust中的引用](https://juejin.cn/post/6844904106310516744)
 * [陈天 · Rust 编程第一课](https://time.geekbang.org/column/article/415988)
+* [Rust入门秘籍](https://rust-book.junmajinlong.com/ch3/07_reference_type.html)
+* [Rust语言圣经(Rust Course)](https://course.rs/basic/ownership/borrowing.html)
+* [Rust中mut, &, &mut的区别](https://blog.csdn.net/hbuxiaofei/article/details/108471806)
+* [Rust 中的 & 和 ref](https://blog.csdn.net/quicmous/article/details/120489008)
+* [理解 Rust 引用和借用](https://zhuanlan.zhihu.com/p/59998584)
+* [正确的Rust引用类型心智模型](https://zhuanlan.zhihu.com/p/88926962)
 
