@@ -735,10 +735,11 @@ fn get_config_content() -> Result<String> {
 
 ## thiserror和anyhow的区别
 
-1. thiserror：提供了一些宏属性（如 `#[from]` 和 `#[error(transparent)]`），用于给调用者提供具体的自定义错误信息，常用于业务代码中
-2. anyhow提供了一个可以包含任何错误类型的统一错误类型 `anyhow::Error`，不需要让调用者关注具体的信息，常用于编写第三方库中
+1. thiserror：提供了一些宏属性（如 `#[from]` 和 `#[error(transparent)]`），用于设计自己的专用错误类型，以便给调用者提供更具体的自定义错误信息，常用于编写第三方库中
 
+2. anyhow提供了一个可以包含任何错误类型的统一错误类型 `anyhow::Error`，只是简单的使用，不需要让调用者关注具体的错误类型，常用于应用程序业务代码中
 
+   
 
 # 参考
 
