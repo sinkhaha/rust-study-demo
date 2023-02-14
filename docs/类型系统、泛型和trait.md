@@ -1179,7 +1179,7 @@ vtable 是一张静态的表，Rust 在编译时会为使用了 trait object 的
 
 
 
-**不是对象安全的trait**
+**怎么区分不是对象安全的trait**
 
 如果 trait 所有的方法，返回值是 Self 或者携带泛型参数，那么这个 trait 就不能产生 trait object。
 
@@ -1194,7 +1194,7 @@ vtable 是一张静态的表，Rust 在编译时会为使用了 trait object 的
 
 * [陈天 · Rust 编程第一课](https://time.geekbang.org/column/article/420028)
 
-* [泛型和特征](https://course.rs/basic/trait/intro.html)_
+* [泛型和特征](https://course.rs/basic/trait/intro.html)
 
 * [Trait 和 Trait Object](https://rust-book.junmajinlong.com/ch11/00.html)
 
