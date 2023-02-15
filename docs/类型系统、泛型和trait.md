@@ -1190,6 +1190,269 @@ vtable 是一张静态的表，Rust 在编译时会为使用了 trait object 的
 
 
 
+## 5.4 Trait Object的使用场景
+
+* trait object 的好处：当在某个上下文中需要满足某个 trait 的类型，且这样的类型可能有很多，当前上下文无法确定会得到哪一个类型时，我们可以用 trait object 来统一处理行为。和泛型参数一样，trait object 也是一种延迟绑定，它让决策可以延迟到运行时，从而得到最大的灵活性。
+* trait Object的坏处：trait object 把决策延迟到运行时，带来的后果是执行效率的打折。在 Rust 里，函数或者方法的执行就是一次跳转指令，而 trait object 方法的执行还多一步，它涉及额外的内存访问，才能得到要跳转的位置再进行跳转，执行的效率要低一些。如果要把 trait object 作为返回值返回，或者要在线程间传递 trait object，都免不了使用 `Box<dyn T>` 或者 `Arc<dyn T>`，会带来额外的堆分配的开销。
+
+
+
+### 5.4.1 在函数的参数中使用
+
+我们可以在函数的参数或者返回值中使用 trait object。
+
+
+
+例如：构建一个 Executor trait，并对比`做静态分发的 impl Executor`、`做动态分发的 &dyn Executor `和 `Box<dyn Executor>` 这几种不同的参数的使用：
+
+```rust
+use std::{error::Error, process::Command};
+
+// 起别名
+pub type BoxedError = Box<dyn Error + Send + Sync>;
+
+pub trait Executor {
+    fn run(&self) -> Result<Option<i32>, BoxedError>;
+}
+
+pub struct Shell<'a, 'b> {
+    cmd: &'a str,
+    args: &'b [&'a str],
+}
+
+impl<'a, 'b> Shell<'a, 'b> {
+    pub fn new(cmd: &'a str, args: &'b [&'a str]) -> Self {
+        Self { cmd, args }
+    }
+}
+
+impl<'a, 'b> Executor for Shell<'a, 'b> {
+    fn run(&self) -> Result<Option<i32>, BoxedError> {
+        let output = Command::new(self.cmd).args(self.args).output()?;
+        Ok(output.status.code())
+    }
+}
+
+// 使用泛型参数
+pub fn execute_generics(cmd: &impl Executor) -> Result<Option<i32>, BoxedError> {
+    cmd.run()
+}
+
+// 使用 trait object: &dyn T
+pub fn execute_trait_object(cmd: &dyn Executor) -> Result<Option<i32>, BoxedError> {
+    cmd.run()
+}
+
+// 使用 trait object: Box<dyn T>
+pub fn execute_boxed_trait_object(cmd: Box<dyn Executor>) -> Result<Option<i32>, BoxedError> {
+    cmd.run()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shell_shall_work() {
+        let cmd = Shell::new("ls", &[]);
+        let result = cmd.run().unwrap();
+        assert_eq!(result, Some(0));
+    }
+
+    #[test]
+    fn execute_shall_work() {
+        let cmd = Shell::new("ls", &[]);
+
+        let result = execute_generics(&cmd).unwrap();
+        assert_eq!(result, Some(0));
+        let result = execute_trait_object(&cmd).unwrap();
+        assert_eq!(result, Some(0));
+        let boxed = Box::new(cmd);
+        let result = execute_boxed_trait_object(boxed).unwrap();
+        assert_eq!(result, Some(0));
+    }
+}
+```
+
+* 这里为了简化代码，使用了 type 关键字创建了一个 BoxedError 类型，是 Box 的别名，它是 Error trait 的 trait object，除了要求类型实现了 Error trait 外，它还有额外的约束：类型必须满足 Send / Sync 这两个 trait
+* impl Executor 使用的是泛型参数的简化版本
+* &dyn Executor 和 `Box<dyn Executor>>` 是 trait object，前者在栈上，后者分配在堆上。值得注意的是，分配在堆上的 trait object 也可以作为返回值返回，比如示例中的 `Result<Option<i32>, BoxedError>` 里使用了 trait object
+
+
+
+### 5.4.2 在函数返回值中使用
+
+在返回值中使用 trait object，是 trait object 使用频率比较高的场景。
+
+
+
+先来看一些实战中会遇到的例子：首先是 [async_trait](https://docs.rs/async-trait)，它是一种特殊的 trait，方法中包含 async fn。目前 [Rust 并不支持 trait 中使用 async fn](https://smallcultfollowing.com/babysteps/blog/2019/10/26/async-fn-in-traits-are-hard/)，一个变通的方法是使用 async_trait 宏。
+
+
+
+如下定义的Fetch trait：
+
+```rust
+// Rust 的 async trait 还没有稳定，可以用 async_trait 宏
+#[async_trait]
+pub trait Fetch {
+    type Error;
+    async fn fetch(&self) -> Result<String, Self::Error>;
+}
+```
+
+这里宏展开后，类似于：
+
+```rust
+pub trait Fetch {
+    type Error;
+    fn fetch<'a>(&'a self) -> 
+        Result<Pin<Box<dyn Future<Output = String> + Send + 'a>>, Self::Error>;
+}
+```
+
+它使用了 trait object 作为返回值。这样不管 fetch() 的实现，返回什么样的 Future 类型，都可以被 trait object 统一起来，调用者只需要按照正常 Future 的接口使用即可。
+
+
+
+再看一个 [snow](https://github.com/mcginty/snow) 下的 [CryptoResolver](https://docs.rs/snow/0.8.0/snow/resolvers/trait.CryptoResolver.html) 的例子：
+
+```rust
+/// An object that resolves the providers of Noise crypto choices
+pub trait CryptoResolver {
+    // 随机数生成算法（Random）
+    /// Provide an implementation of the Random trait or None if none available.
+    fn resolve_rng(&self) -> Option<Box<dyn Random>>;
+
+    // DH 算法（Dh）
+    /// Provide an implementation of the Dh trait for the given DHChoice or None if unavailable.
+    fn resolve_dh(&self, choice: &DHChoice) -> Option<Box<dyn Dh>>;
+
+    // 哈希算法（Hash）
+    /// Provide an implementation of the Hash trait for the given HashChoice or None if unavailable.
+    fn resolve_hash(&self, choice: &HashChoice) -> Option<Box<dyn Hash>>;
+
+    // 对称加密算法（Cipher）
+    /// Provide an implementation of the Cipher trait for the given CipherChoice or None if unavailable.
+    fn resolve_cipher(&self, choice: &CipherChoice) -> Option<Box<dyn Cipher>>;
+
+    // 密钥封装算法（Kem）
+    /// Provide an implementation of the Kem trait for the given KemChoice or None if unavailable
+    #[cfg(feature = "hfs")]
+    fn resolve_kem(&self, _choice: &KemChoice) -> Option<Box<dyn Kem>> {
+        None
+    }
+}
+```
+
+这是一个处理 [Noise Protocol](https://zhuanlan.zhihu.com/p/96944134) 使用何种加密算法的一个 trait。这个 trait 的每个方法，都返回一个 trait object，每个 trait object 都提供加密算法中所需要的不同的能力。所有这些，都有一系列的具体的算法实现，通过 CryptoResolver trait，可以得到当前使用的某个具体算法的 trait object。在处理业务逻辑时，我们不用关心当前究竟使用了什么算法，就能根据这些 trait object 构筑相应的实现，比如下面的 generate_keypair：
+
+```rust
+pub fn generate_keypair(&self) -> Result<Keypair, Error> {
+    // 拿到当前的随机数生成算法
+    let mut rng = self.resolver.resolve_rng().ok_or(InitStage::GetRngImpl)?;
+    // 拿到当前的 DH 算法
+    let mut dh = self.resolver.resolve_dh(&self.params.dh).ok_or(InitStage::GetDhImpl)?;
+    let mut private = vec![0u8; dh.priv_len()];
+    let mut public = vec![0u8; dh.pub_len()];
+    // 使用随机数生成器 和 DH 生成密钥对
+    dh.generate(&mut *rng);
+
+    private.copy_from_slice(dh.privkey());
+    public.copy_from_slice(dh.pubkey());
+
+    Ok(Keypair { private, public })
+}
+```
+
+
+
+### 5.4.3 在数据结构中使用
+
+继续以 snow 的代码为例，看 HandshakeState 这个用于处理 Noise Protocol 握手协议的数据结构，用到了哪些 trait object
+
+```rust
+pub struct HandshakeState {
+    pub(crate) rng:              Box<dyn Random>,
+    pub(crate) symmetricstate:   SymmetricState,
+    pub(crate) cipherstates:     CipherStates,
+    pub(crate) s:                Toggle<Box<dyn Dh>>,
+    pub(crate) e:                Toggle<Box<dyn Dh>>,
+    pub(crate) fixed_ephemeral:  bool,
+    pub(crate) rs:               Toggle<[u8; MAXDHLEN]>,
+    pub(crate) re:               Toggle<[u8; MAXDHLEN]>,
+    pub(crate) initiator:        bool,
+    pub(crate) params:           NoiseParams,
+    pub(crate) psks:             [Option<[u8; PSKLEN]>; 10],
+    #[cfg(feature = "hfs")]
+    pub(crate) kem:              Option<Box<dyn Kem>>,
+    #[cfg(feature = "hfs")]
+    pub(crate) kem_re:           Option<[u8; MAXKEMPUBLEN]>,
+    pub(crate) my_turn:          bool,
+    pub(crate) message_patterns: MessagePatterns,
+    pub(crate) pattern_position: usize,
+}
+```
+
+你不需要了解 Noise protocol，也能够大概可以明白这里 Random、Dh 以及 Kem 三个 trait object 的作用：它们为握手期间使用的加密协议提供最大的灵活性。**如果这里不用 trait object，这个数据结构该怎么处理？**
+
+
+
+可以用泛型参数，也就是说：
+
+```rust
+pub struct HandshakeState<R, D, K>
+where
+    R: Random,
+    D: Dh,
+    K: Kem
+{
+  ...
+}
+```
+
+这是我们大部分时候处理这样的数据结构的选择。但是，过多的泛型参数会带来两个问题：
+
+1. 首先，代码实现过程中，所有涉及的接口都变得非常臃肿，在使用 HandshakeState 的任何地方，都必须带着这几个泛型参数以及它们的约束
+2. 其次，这些参数所有被使用到的情况，组合起来，会生成大量的代码
+
+而使用 trait object，在牺牲一点性能的前提下，消除了这些泛型参数，实现的代码更干净清爽，且代码只会有一份实现。
+
+
+
+**在数据结构中使用 trait object 还有一种很典型的场景是：闭包。**
+
+因为在 Rust 中，闭包都是以匿名类型的方式出现，我们无法直接在数据结构中使用其类型，只能用泛型参数。而对闭包使用泛型参数后，如果捕获的数据太大，可能造成数据结构本身太大；但有时，我们并不在意一点点性能损失，更愿意让代码处理起来更方便。
+
+
+
+例1：比如用于做 RBAC 的库 [oso](https://github.com/osohq/oso) 里的 AttributeGetter，它包含了一个 Fn
+
+```rust
+#[derive(Clone)]
+pub struct AttributeGetter(
+    Arc<dyn Fn(&Instance, &mut Host) -> crate::Result<PolarValue> + Send + Sync>,
+);
+```
+
+例2：再比如做交互式 CLI 的 [dialoguer](https://github.com/mitsuhiko/dialoguer) 的 [Input](https://docs.rs/dialoguer/0.8.0/dialoguer/struct.Input.html)，它的 validator 就是一个 FnMut
+
+```rust
+pub struct Input<'a, T> {
+    prompt: String,
+    default: Option<T>,
+    show_default: bool,
+    initial_text: Option<String>,
+    theme: &'a dyn Theme,
+    permit_empty: bool,
+    validator: Option<Box<dyn FnMut(&T) -> Option<String> + 'a>>,
+    #[cfg(feature = "history")]
+    history: Option<&'a mut dyn History<T>>,
+}
+```
+
+
+
 # 参考
 
 * [陈天 · Rust 编程第一课](https://time.geekbang.org/column/article/420028)
