@@ -1,7 +1,9 @@
 // 手动实现需求，运行 cargo run --example manual-command
 
+use macrostest::RawBuilder;
+
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, RawBuilder)] // 使用RawBuilder宏，把input打印出来
 pub struct Command {
     executable: String,
     args: Vec<String>,
