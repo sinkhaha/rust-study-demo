@@ -4,7 +4,7 @@ use askama::Template;
 use proc_macro::{Ident, TokenStream, TokenTree};
 use std::collections::VecDeque;
 
-/// 处理 jinja 模板的数据结构，在模板中我们使用了 name / builder_name / fields
+/// 处理 jinja 模板的数据结构，builder.j2为模板，在模板中使用了 name / builder_name / fields
 #[derive(Template)]
 #[template(path = "builder.j2", escape = "none")]
 pub struct BuilderContext {
