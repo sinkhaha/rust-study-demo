@@ -110,7 +110,7 @@ fn split(input: TokenStream) -> (Ident, TokenStream) {
     (ident, group.expect("Didn't find field group").stream())
 }
 
-/// 从包含 fields 的 TokenStream 中切出来一个个 Fd
+/// 核心方法，从包含 fields 的 TokenStream 中切出来一个个 Fd，例如把一个 a=1,b=2 的字符串切成 [[a, 1], [b, 2]]
 fn get_struct_fields(input: TokenStream) -> Vec<Fd> {
     let input = input.into_iter().collect::<Vec<_>>();
     input
