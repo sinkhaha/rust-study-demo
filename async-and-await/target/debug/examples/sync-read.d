@@ -1,1 +1,0 @@
-/Users/shuxinlin/Documents/rust-workspaces/rust-study-demo/async-and-await/target/debug/examples/sync-read: /Users/shuxinlin/Documents/rust-workspaces/rust-study-demo/async-and-await/examples/sync-read.rs /Users/shuxinlin/Documents/rust-workspaces/rust-study-demo/async-and-await/src/lib.rs
