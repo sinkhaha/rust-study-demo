@@ -1,0 +1,5 @@
+/Users/shuxinlin/Documents/rust-workspaces/rust-study-demo/async-and-await/target/debug/build/lock_api-be06b14f8c047ede/build_script_build-be06b14f8c047ede: /Users/shuxinlin/.cargo/registry/src/mirrors.tuna.tsinghua.edu.cn-df7c3c540f42cdbd/lock_api-0.4.9/build.rs
+
+/Users/shuxinlin/Documents/rust-workspaces/rust-study-demo/async-and-await/target/debug/build/lock_api-be06b14f8c047ede/build_script_build-be06b14f8c047ede.d: /Users/shuxinlin/.cargo/registry/src/mirrors.tuna.tsinghua.edu.cn-df7c3c540f42cdbd/lock_api-0.4.9/build.rs
+
+/Users/shuxinlin/.cargo/registry/src/mirrors.tuna.tsinghua.edu.cn-df7c3c540f42cdbd/lock_api-0.4.9/build.rs:

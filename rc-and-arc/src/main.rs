@@ -15,16 +15,31 @@
 //     println!("count after create c: {}", Rc::strong_count(&c)); // 3
 // }
 
-use std::rc::Rc;
-use std::cell::RefCell;
+
+#[derive(Debug, Copy, Clone)]
+struct Myt {
+   a: i32
+}
 
 fn main() {
-    let a = Rc::new(RefCell::new(1));
-    let b = a.clone();
+    let rst = Myt { a: 32 };
+    let rst1 = rst;
 
-    // 断言a的引用计数为2
-    assert_eq!(2, Rc::strong_count(&a));
+    drop(rst1.a);
 
-    let c = b.borrow_mut();
-    println!("c: {}", c); // 1
+    // std::mem::drop(rst1);
+
+    println!("a: {} b: {}", rst.a, rst1.a);
+
+    let v = vec![1, 2, 3];
+
+    // drop(v); 
+    println!("a: {:?} ", v);
+
+    // let a: i32 = 666;
+
+    // let b = a;
+
+    // 解指针，此时的 “*表达式” 类似C++的解指针，即拿到b存的地址指向的值
+    // println!("a: {} b: {}", a, b); // a: 666 b: 666
 }
