@@ -1,6 +1,9 @@
 use anyhow::Result;
 use std::time::Duration;
 
+// 运行 cargo run --example blocl-async-task
+
+
 // 强制 tokio 只使用一个工作线程，这样 task 2 不会跑到其它线程执行
 #[tokio::main(worker_threads = 1)]
 async fn main() -> Result<()> {
