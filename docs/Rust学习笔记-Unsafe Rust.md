@@ -1,4 +1,4 @@
-# 为什么有 unsafe
+# 1 为什么有 unsafe
 
 * unsafe 存在的主要是因为 Rust 的静态检查太强了；Rust为了内存安全，所做的所有权、借用检查、生命周期等规则往往是普适性的，编译器在分析代码时，一些正确代码会因为编译器无法分析出它的所有正确性，结果将这段代码拒绝，导致编译错误
 
@@ -6,9 +6,9 @@
 
 
 
-# 可使用 unsafe 的场景
+# 2 可使用 unsafe 的场景
 
-## 实现 unsafe trait 时
+## 2.1 实现 unsafe trait 时
 
 **任何 trait 只要声明成 unsafe，它就是 unsafe trait**
 
@@ -41,7 +41,7 @@ fn main() {
 
 **Send / Sync trait**
 
-看下 Rust 中的 Send / Sync ，这两个 trait 都是 unsafe trait
+Rust 中的 Send / Sync ，这两个 trait 都是 unsafe trait
 
 ```rust
 pub unsafe auto trait Send {}
@@ -71,7 +71,7 @@ unsafe impl Sync for Bytes {}
 
 
 
-在实现 Send/Sync 时要注意，如果无法保证数据结构的线程安全，错误实现 Send/Sync 之后，会导致程序出现莫名其妙的还不太容易复现的崩溃。
+**在实现 Send/Sync 时要注意，如果无法保证数据结构的线程安全，错误实现 Send/Sync 之后，会导致程序出现莫名其妙的还不太容易复现的崩溃。**
 
 如下代码，强行为 Evil 实现了 Send，而 Evil 内部携带的 Rc 是不允许实现 Send 的。代码通过实现 Send 而规避了 Rust 的并发安全检查，使其可以编译通过，然而在运行时，有一定的几率出现崩溃：
 
@@ -132,7 +132,7 @@ thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Any { ..
 
 
 
- ## 调用已有的 unsafe 函数
+ ## 2.2 调用已有的 unsafe 函数
 
 **使用 unsafe 关键字声明的函数即为 unsafe 函数，一个普通的 trait 里可以包含 unsafe 函数**。如下代码
 
@@ -158,9 +158,9 @@ fn main() {
 }
 ```
 
-**unsafe fn ：**是函数对调用者的约束，它告诉函数的调用者请正确使用，如果胡乱使用会带来内存安全的问题，所以调用 unsafe fn 时，需要加 unsafe block 把它包裹起来，提醒别人注意这里有 unsafe 代码。
+**unsafe fn ：**是函数对调用者的约束，它告诉函数的调用者要正确使用该函数，如果乱使用会带来内存安全的问题，所以调用 unsafe fn 时，需要加 unsafe block 把它包裹起来，提醒别人注意这里有 unsafe 代码。
 
-> 另一种调用 unsafe 函数的方法是定义 unsafe fn，然后在这个 unsafe fn 里调用其它 unsafe fn。
+> 另一种调用 unsafe 函数的方法是定义 unsafe fn，然后在这个 unsafe fn 里调用其它 unsafe fn
 
 
 
@@ -186,9 +186,13 @@ pub const unsafe fn from_utf8_unchecked(v: &[u8]) -> &str {
 
 
 
-## 对裸指针做解引用
+## 2.3 对裸指针做解引用
 
- 很多时候，如果需要进行一些特殊处理，会把得到的数据结构转换成裸指针。裸指针的解引用操作是不安全的，潜在风险，所以它也需要使用 unsafe 来明确告诉编译器，以及代码的阅读者，也就是要使用 unsafe block 包裹起来。
+ 很多时候，如果需要进行一些特殊处理，会把得到的数据结构转换成裸指针。
+
+
+
+裸指针的解引用操作是不安全的，有潜在风险，所以它也需要使用 unsafe 来明确告诉编译器，以及代码的阅读者，也就是要使用 unsafe block 包裹起来。
 
 > 裸指针在生成时无需 unsafe，因为它并没有内存不安全的操作
 
@@ -249,7 +253,7 @@ fn main() {
 
 
 
-## 使用 FFI
+## 2.4 使用 FFI
 
 最后一种可以使用 unsafe 的地方是 FFI（Foreign Function Interface）。当 Rust 要使用其它语言的能力时（比如 C/C++ 的库），Rust 编译器并不能保证那些语言具备内存安全，所以和第三方语言交互的接口，一律要使用 unsafe。
 
@@ -279,9 +283,9 @@ fn main() {
 
 
 
-# 不推荐使用 unsafe 的场景
+# 3 不推荐使用 unsafe 的场景
 
-## 访问或修改可变静态变量
+## 3.1 访问或修改可变静态变量
 
 Rust 支持可变静态变量（使用 static mut 来声明）。如果声明了 static mut 变量，在访问时都需要使用 unsafe block，因为全局静态变量如果可写，会潜在有线程不安全的风险
 
@@ -373,7 +377,7 @@ fn main() {
 
 
 
-## 在宏里使用 unsafe
+## 3.2 在宏里使用 unsafe
 
 在宏中使用 unsafe，是非常危险的，建议不要使用，因为
 
@@ -383,7 +387,7 @@ fn main() {
 
 
 
-## 使用 unsafe 提升性能
+## 3.3 使用 unsafe 提升性能
 
 还有一种使用 unsafe 纯粹是为了提升性能，比如使用 unsafe 略过边界检查、使用未初始化内存等
 
@@ -393,7 +397,7 @@ fn main() {
 
 # 小结
 
-本文介绍了为什么要使用 unsafe，unsafe 代码是 Rust 这样的系统级语言必须包含的部分，当 Rust 跟硬件、操作系统，以及其他语言打交道，unsafe 是必不可少的。以及介绍了可以使用 unsafe 的4种场景，3种不推荐使用 unsafe 的场景
+unsafe 代码是 Rust 这样的系统级语言必须包含的部分，当 Rust 跟硬件、操作系统，以及其他语言打交道，unsafe 是必不可少的。有4种场景可以使用 unsafe，有3种不推荐使用 unsafe 的场景。
 
 ![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/node_source/20230307002848.png)
 
