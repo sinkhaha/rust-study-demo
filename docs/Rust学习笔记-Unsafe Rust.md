@@ -397,7 +397,7 @@ fn main() {
 
 # 小结
 
-unsafe 代码是 Rust 这样的系统级语言必须包含的部分，当 Rust 跟硬件、操作系统，以及其他语言打交道，unsafe 是必不可少的。有4种场景可以使用 unsafe，有3种不推荐使用 unsafe 的场景。
+unsafe 代码是 Rust 这样的系统级语言必须包含的部分，当 Rust 跟硬件、操作系统，以及其他语言打交道，unsafe 是必不可少的。有4种可以使用 unsafe 的场景，有3种不推荐使用 unsafe 的场景。
 
 ![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/node_source/20230307002848.png)
 
