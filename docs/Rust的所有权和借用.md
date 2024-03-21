@@ -177,9 +177,9 @@ list.push(Person {
 
 ```
 
+如图
 
-
-// TODO
+![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/rust-chengxusheji/Box%E6%89%80%E6%9C%89%E6%9D%83%E7%A7%BB%E5%8A%A8.drawio.png)
 
 
 
