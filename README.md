@@ -1,4 +1,4 @@
-# rust-study-demo
+# Rust 学习笔记
 
 ## 一些地址
 * Rust代码文档系统 https://docs.rs/
