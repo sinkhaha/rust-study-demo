@@ -6,7 +6,7 @@ pub use std::string::ToString;
 #[macro_export]
 macro_rules! json {
     (null) => {
-        $crate::Json::Null
+        $crate::Json::Null // 使用 $crate 来引用当前 crate 中的 Json
     };
 
     // 数组
