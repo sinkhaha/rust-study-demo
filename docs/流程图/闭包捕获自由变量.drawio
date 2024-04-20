@@ -1,0 +1,73 @@
+<mxfile host="app.diagrams.net" modified="2024-03-24T08:32:57.762Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="Ean4qDgv_WJHlsxXfVtD" version="24.0.7" type="device">
+  <diagram name="第 1 页" id="HR5joNmHb5V4D5B1lnCM">
+    <mxGraphModel dx="954" dy="515" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Iplon2KPiVSkD9c07XoF-24" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="170" y="60" width="760" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-19" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="300" y="130" width="450" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-3" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;&lt;b&gt;闭包&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="290" y="130" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="360" y="190" width="250" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-6" value="自由变量" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="230" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-8" value="局部变量" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="390" y="230" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-9" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;&lt;b&gt;函数体&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="360" y="190" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-10" value="&amp;amp;a" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="190" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-14" value="&amp;amp;b" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="260" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-15" value="b" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="260" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-17" value="a" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="190" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-20" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Iplon2KPiVSkD9c07XoF-6" target="Iplon2KPiVSkD9c07XoF-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="620" y="250" as="sourcePoint" />
+            <mxPoint x="670" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-21" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Iplon2KPiVSkD9c07XoF-6" target="Iplon2KPiVSkD9c07XoF-14">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="590" y="250" as="sourcePoint" />
+            <mxPoint x="670" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-22" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Iplon2KPiVSkD9c07XoF-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="760" y="260" as="sourcePoint" />
+            <mxPoint x="800" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-23" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Iplon2KPiVSkD9c07XoF-14" target="Iplon2KPiVSkD9c07XoF-15">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="780" y="310" as="sourcePoint" />
+            <mxPoint x="830" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-25" value="&lt;b&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;上下文环境&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="170" y="70" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Iplon2KPiVSkD9c07XoF-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="Iplon2KPiVSkD9c07XoF-24" target="Iplon2KPiVSkD9c07XoF-24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

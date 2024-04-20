@@ -1,12 +1,12 @@
-# 智能指针
+# 1 智能指针
 
 **什么是智能指针**
 
-在 Rust 中，凡是需要`做资源回收`的数据结构，且实现了 Deref / DerefMut / Drop，都是智能指针
+在 `Rust` 中，凡是需要`做资源回收`的数据结构，且实现了 `Deref / DerefMut / Drop` 特型的，都是智能指针。智能指针是一个表现行为很像指针的数据结构，但除了指向数据的指针外，它还有元数据以提供额外的处理能力。
 
 
 
-**指针、引用 和 智能指针 的区别**
+**指针、引用、智能指针的区别**
 
 * 指针：是一个持有内存地址的值，可以通过`解引用`来访问它指向的内存地址，理论上可以解引用到任意数据类型
 * 引用：是一个特殊的指针，它的解引用访问是受限的，只能解引用到它引用数据的类型
@@ -14,21 +14,21 @@
 
 
 
-**智能指针 和 普通胖指针的区别**
+**智能指针和普通胖指针的区别**
 
-* 智能指针一定是一个胖指针，但胖指针不一定是一个智能指针，胖指针包含一个指向数据的指针和数据的长度信息，在 Rust 中，数组、切片、trait 对象等都是胖指针。
+智能指针一定是一个胖指针，但胖指针不一定是一个智能指针，胖指针包含一个指向数据的指针和数据的长度信息，在 `Rust` 中，数组、切片、 特型对象等都是胖指针。
 
-  > 如：String 是一个智能指针，而 &str 只是一个胖指针，&str 有指向堆内存字符串的指针，同时还有关于字符串长度的元数据，String 则比 &str 多了一个 capacity 字段
 
-* String 对堆上的值有所有权，而 &str 是没有所有权的
+
+例如：`String` 是一个智能指针，而 `&str` 只是一个胖指针，`&str` 有指向堆内存字符串的指针，同时还有关于字符串长度的元数据，`String` 则比 `&str` 多了一个 `capacity` 字段。`String` 对堆上的值有所有权，而 `&str` 是没有所有权的，这是 `Rust` 中智能指针和普通胖指针的区别。如下
 
 ![](https://sink-blog-pic.oss-cn-shenzhen.aliyuncs.com/img/node_source/%E6%88%AA%E5%B1%8F2023-03-12%2018.41.21.png)
 
 
 
-**智能指针和 结构体的区别**
+**智能指针 和 结构体的区别**
 
-智能指针String 是用结构体的形式定义的，定义如下
+智能指针 `String` 是用结构体的形式定义的，定义如下
 
 ```rust
 pub struct String {
@@ -36,7 +36,7 @@ pub struct String {
 }
 ```
 
-* 和普通的结构体不同的是，[String 实现了 Deref 和 DerefMut](https://doc.rust-lang.org/src/alloc/string.rs.html#2454-2470)，**这使得它在解引用时，会得到 &str**
+* 和普通的结构体不同的是，[String 实现了 Deref 和 DerefMut](https://doc.rust-lang.org/src/alloc/string.rs.html#2454-2470)，**这使得它在解引用时，会得到 `&str`**
 
 ```rust
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -58,7 +58,7 @@ impl ops::DerefMut for String {
 }
 ```
 
-* 由于 String 在堆上分配了数据，所以 String 还需要为其分配的资源做相应的回收。因为 String 内部使用了 `Vec<u8>`，所以它可以依赖 `Vec<T> 的能力`来释放堆内存，标准库中 `Vec<T> `实现 [Drop trait](https://doc.rust-lang.org/src/alloc/vec/mod.rs.html#3052-3063) 的代码如下：
+* 由于 `String` 在堆上分配了数据，所以 `String` 还需要为其分配的资源做相应的回收。因为 `String` 内部使用了 `Vec<u8>`，所以它可以依赖 `Vec<T>` 的能力来释放堆内存，标准库中 `Vec<T> ` 通过 [Drop trait](https://doc.rust-lang.org/src/alloc/vec/mod.rs.html#3052-3063) 来释放内存，代码如下：
 
 ```rust
 unsafe impl<#[may_dangle] T, A: Allocator> Drop for Vec<T, A> {
@@ -76,11 +76,11 @@ unsafe impl<#[may_dangle] T, A: Allocator> Drop for Vec<T, A> {
 
 
 
-# 个别常见的智能指针
+# 2 个别常见的智能指针
 
-Rust 中有如下常用智能指针
+`Rust` 中有如下常用智能指针
 
-* String：字符串类型
+* `String`：字符串类型
 * `Box<T> 和 Vec<T>`： 在堆上分配内存
 * `Cow<'a, B>`：写时克隆
 * `Rc<T> 和 Arc<T>`：引用计数，用于实现共享所有权
@@ -88,15 +88,15 @@ Rust 中有如下常用智能指针
 
 
 
-## `Box<T>`
+## 2.1 `Box<T>`
 
-**什么是Box**
+**什么是 `Box`**
 
-`Box<T>` 可在堆上分配内存，并将值存在堆内存中；绝大多数包含堆内存分配的数据类型，内部都是通过 `Box<T>` 完成的，比如 `Vec<T>`。
+`Box<T>` 是一个智能指针，它可在堆上分配内存，并将值存在堆内存中。绝大多数包含堆内存分配的数据类型，内部都是通过 `Box<T>` 完成的，比如 `Vec<T>`。
 
 
 
-[`Box<T>`](https://doc.rust-lang.org/src/alloc/boxed.rs.html#198-201)  的内部有一个 [`Unique<T>`](https://doc.rust-lang.org/src/core/ptr/unique.rs.html#36-44)（包裹了一个 `*const T `指针，并唯一拥有这个指针）
+[`Box<T>`](https://doc.rust-lang.org/src/alloc/boxed.rs.html#198-201)  的内部有一个 [`Unique<T>`](https://doc.rust-lang.org/src/core/ptr/unique.rs.html#36-44)（包裹了一个 `*const T ` 指针，并唯一拥有这个指针）
 
 ```rust
 // Box定义
@@ -118,25 +118,25 @@ pub struct Unique<T: ?Sized> {
 
 **内存分配器**
 
-在堆上分配内存，需要使用内存分配器（Allocator）；内存分配器可以有效地利用剩余内存，并控制内存在分配和释放过程中产生的碎片的数量。
+在堆上分配内存，需要使用内存分配器（`Allocator`）；内存分配器可以有效地利用剩余内存，并控制内存在分配和释放过程中产生的碎片的数量。
 
 
 
-从 Box 的定义可以看到 Box 有一个缺省的泛型参数 A，它需要满足 [Allocator trait](https://doc.rust-lang.org/std/alloc/trait.Allocator.html)，默认值是 Global。Allocator trait 提供很多方法，如：
+从 `Box` 的定义可以看到 `Box` 有一个缺省的泛型参数 A，它需要满足 [Allocator trait](https://doc.rust-lang.org/std/alloc/trait.Allocator.html)，默认值是 `Global`。`Allocator trait `提供很多方法，如：
 
-* allocate ：用于分配内存，对应 C语言 的 malloc/calloc
-* deallocate：用于释放内存，对应 C语言 的 free
-* grow / shrink：用来扩大或缩小堆上已分配的内存，对应 C语言 的 realloc
+* `allocate` ：用于分配内存，对应 `C` 语言的 `malloc/calloc`
+* `deallocate`：用于释放内存，对应 `C` 语言的` free`
+* `grow / shrink`：用来扩大或缩小堆上已分配的内存，对应 `C` 语言 的 `realloc`
 
 
 
 **修改默认的全局分配器**
 
-可以使用` #[global_allocator]` 标记宏来定义自己的全局分配器，用于替换默认的内存分配器。
+可以使用 `#[global_allocator]` 标记宏来定义自己的全局分配器，用于替换默认的内存分配器。
 
 
 
-例如，使用[jemalloc](https://crates.io/crates/jemallocator)内存分配器来分配内存，如下这样设置之后，使用 `Box::new()` 分配的内存就是jemalloc分配出来的了
+例如，使用 [jemalloc](https://crates.io/crates/jemallocator) 内存分配器来分配内存，如下这样设置之后，使用 `Box::new()` 分配的内存就是 `jemalloc`分配出来的了
 
 ```rust
 use jemallocator::Jemalloc;
@@ -147,21 +147,19 @@ static GLOBAL: Jemalloc = Jemalloc;
 fn main() {}
 ```
 
-如果想使用自己写的全局分配器，可以实现 [GlobalAlloc trait](https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html)，它和 Allocator trait 的区别，主要在于是否允许分配长度为零的内存。
+如果想使用自己写的全局分配器，可以实现 [GlobalAlloc trait](https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html)，它和 `Allocator trait` 的区别，主要在于是否允许分配长度为零的内存。
 
 
 
 **Box 的内存的分配 和 释放 **
 
-接下来使用 Box 实现一个内存分配器（这里主要是看看内存如何分配和释放，没有实际实现某个分配算法）
+接下来使用 `Box` 实现一个内存分配器（这里主要是看看内存如何分配和释放，没有实际实现某个分配算法）
 
-1、首先看`Box<T>`内存的分配
+1、首先看 `Box<T>`内存的分配
 
-定义自己的内存分配器 MyAllocator，并实现GlobalAlloc trait。
+定义自己的内存分配器 `MyAllocator`，并实现 `GlobalAlloc trait`。
 
-> 注意：这里不能使用 println!() 。因为 stdout 会打印到一个由 Mutex 互斥锁保护的共享全局 buffer 中，这个过程中会涉及内存的分配，分配的内存又会触发 println!()，最终造成程序崩溃。而是使用 eprintln! ，eprintln! 直接打印到 stderr，不会 buffer。
-
-> 代码见[这里](https://github.com/sinkhaha/rust-study-demo/blob/main/smart-point/src/allocator.rs)
+> 注意：这里不能使用 `println!() `。因为 `stdout` 会打印到一个由 `Mutex` 互斥锁保护的共享全局 `buffer` 中，这个过程中会涉及内存的分配，分配的内存又会触发 `println!()`，最终造成程序崩溃。而是使用 `eprintln!` ，`eprintln!` 直接打印到 `stderr`，不会 `buffer`。代码可见[这里](https://github.com/sinkhaha/rust-study-demo/blob/main/smart-point/src/allocator.rs)
 
 ```rust
 use std::alloc::{GlobalAlloc, Layout, System};
@@ -236,9 +234,9 @@ FREE: 0x7fbe0dc05dc0, size 64
 FREE: 0x7fbe0dc05da0, size 24
 ```
 
-**在使用 Box 分配堆内存时要注意，`Box::new() `是一个函数，所以传入它的数据会出现在栈上，再移动到堆上。**
+**在使用 `Box` 分配堆内存时要注意，`Box::new() `是一个函数，所以传入它的数据会出现在栈上，再移动到堆上。**
 
-如果代码里的 Matrix 结构不是 505 个字节，是一个非常大的结构，就有可能出问题；比如下面的代码在堆上分配 16M 内存，如果你在 [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c824fba820015db5c39d4cd700716c16) 里运行，直接栈溢出
+如果代码里的 `Matrix` 结构不是 505 个字节，是一个非常大的结构，就有可能出问题；比如下面的代码在堆上分配 16M 内存，如果你在 [playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=c824fba820015db5c39d4cd700716c16) 里运行，直接栈溢出
 
 ```rust
 fn main() {
@@ -248,7 +246,7 @@ fn main() {
 }
 ```
 
-如果在本地使用` cargo run —release `编译成 release 代码运行，会正常执行，不会出现栈溢出。因为 `cargo run` 或者在 playground 下运行，默认是 debug build，它不会做任何 inline 的优化，而` Box::new() `的实现就一行代码，并注明了要 inline，在 release 模式下，这个函数调用会被优化掉，如果不 inline，整个 16M 的大数组会通过栈内存传递给 `Box::new`，导致栈溢出
+如果在本地使用` cargo run —release `编译成 `release` 代码运行，会正常执行，不会出现栈溢出。因为 `cargo run` 或者在 `playground` 下运行，默认是 `debug build`，它不会做任何 `inline` 的优化，而 ` Box::new()` 的实现就一行代码，并注明了要 `inline`，在 `release` 模式下，这个函数调用会被优化掉，如果不 `inline`，整个 16M 的大数组会通过栈内存传递给 `Box::new`，导致栈溢出
 
 ```rust
 #[cfg(not(no_global_oom_handling))]
@@ -261,7 +259,7 @@ pub fn new(x: T) -> Self {
 }
 ```
 
-这里的 box 是 Rust 内部的关键字，用户代码无法调用，它只出现在 Rust 代码中，用于分配堆内存，box 关键字在编译时，会使用内存分配器分配内存。
+这里的 `box` 是 `Rust` 内部的关键字，用户代码无法调用，它只出现在 `Rust` 代码中，用于分配堆内存，`box` 关键字在编译时，会使用内存分配器分配内存。
 
 
 
@@ -278,19 +276,19 @@ unsafe impl<#[may_dangle] T: ?Sized, A: Allocator> Drop for Box<T, A> {
 }
 ```
 
-目前 drop trait 什么都没有做，编译器会自动插入 deallocate 的代码。
+目前 `drop trait` 什么都没有做，编译器会自动插入 `deallocate` 的代码。
 
 
 
-## `Cow<'a, B>`
+## 2.2 `Cow<'a, B>`
 
 **什么是 Cow**
 
-Cow 是用于提供写时克隆（Clone-on-Write）的一个智能指针，它跟虚拟内存管理的写时复制（Copy-on-write）有点类似：包裹一个只读借用，但如果调用者需要所有权或者需要修改内容，那么它会 clone 借用的数据。
+`Cow` 是用于提供写时克隆（`Clone-on-Write`）的一个智能指针，它跟虚拟内存管理的写时复制（`Copy-on-write`）有点类似：包裹一个只读借用，但如果调用者需要所有权或者需要修改内容，那么它会 `clone` 借用的数据。
 
 
 
-Cow 的定义如下，它是一个枚举，它可以包含一个对类型 B 的只读引用，或者包含对类型 B 的拥有所有权的数据
+`Cow` 是一个枚举，它可以包含一个对类型 `B` 的只读引用，或者包含对类型 `B` 的拥有所有权的数据，它的定义如下
 
 ```rust
 pub enum Cow<'a, B> where B: 'a + ToOwned + ?Sized {
@@ -299,7 +297,7 @@ pub enum Cow<'a, B> where B: 'a + ToOwned + ?Sized {
 }
 ```
 
-这里引入了一个 ToOwned trait ，在 ToOwned trait 定义中，又引入了一个 Borrow trait，ToOwned trait 和  Borrow trait 都是 [std::borrow](https://doc.rust-lang.org/std/borrow/index.html) 下的 trait，它们的定义如下：
+这里引入了一个 `ToOwned trait`，在 `ToOwned trait` 定义中，又引入了一个 `Borrow trait`，`ToOwned trait` 和  `Borrow trait` 都是 [std::borrow](https://doc.rust-lang.org/std/borrow/index.html) 下的 `trait`，它们的定义如下：
 
 ```rust
 pub trait ToOwned {
@@ -315,7 +313,7 @@ pub trait Borrow<Borrowed> where Borrowed: ?Sized {
 }
 ```
 
-* `type Owned: Borrow<Self>`：说明 ToOwned trait 有一个关联类型 Owned，它需要使用者去定义，注意这里 Owned 不能是任意类型，它必须满足 Borrow trait。例如， [str 对 ToOwned trait 的实现](https://doc.rust-lang.org/src/alloc/str.rs.html#203-217)
+* `type Owned: Borrow<Self>`：说明 `ToOwned trait` 有一个关联类型 `Owned`，它需要使用者去定义，注意这里 `Owned` 不能是任意类型，它必须满足 `Borrow trait`。例如， [str 对 ToOwned trait 的实现](https://doc.rust-lang.org/src/alloc/str.rs.html#203-217)
 
 ```rust
 impl ToOwned for str {
@@ -333,7 +331,7 @@ impl ToOwned for str {
 }
 ```
 
-可以看到这里关联类型 Owned 被定义为 String。因为实现 ToOwned 的主体是 str，所以 `Borrow<Self>` 是` Borrow<str>`，也就是说 [String 是实现了 `Borrow<str>`](ttps://doc.rust-lang.org/src/alloc/str.rs.html#188-193)：
+可以看到这里关联类型 `Owned` 被定义为 `String`。因为实现 `ToOwned` 的主体是 `str`，所以 `Borrow<Self>` 是` Borrow<str>`，也就是说 [String 是实现了 `Borrow<str>`](ttps://doc.rust-lang.org/src/alloc/str.rs.html#188-193)：
 
 ```rust
 impl Borrow<str> for String {
@@ -354,7 +352,7 @@ impl Borrow<str> for String {
 
 **Borrow 定义成了一个泛型 trait **
 
-因为一个类型可以被借用成不同的引用；如下，String 可以被借用为 &String，也可以被借用为 &str
+因为一个类型可以被借用成不同的引用；如下，`String` 可以被借用为 `&String`，也可以被借用为 `&str`
 
 ```rust
 use std::borrow::Borrow;
@@ -376,7 +374,7 @@ fn main() {
 
 **Cow 的 Deref 实现**
 
-Cow是智能指针，那它自然需要实现 [Deref trait](https://doc.rust-lang.org/src/alloc/borrow.rs.html#332-344)：
+`Cow` 是智能指针，那它自然需要实现 [Deref trait](https://doc.rust-lang.org/src/alloc/borrow.rs.html#332-344)：
 
 ```rust
 impl<B: ?Sized + ToOwned> Deref for Cow<'_, B> {
@@ -391,35 +389,33 @@ impl<B: ?Sized + ToOwned> Deref for Cow<'_, B> {
 }
 ```
 
-实现的原理很简单，根据 self 是 Borrowed 还是 Owned，我们分别取其内容，生成引用：
+实现的原理很简单，根据 `self` 是 `Borrowed` 还是 `Owned`，我们分别取其内容，生成引用：
 
-* 对于 Borrowed，直接就是引用
-* 对于 Owned，调用其 borrow() 方法，获得引用
+* 对于 `Borrowed`，直接就是引用
+* 对于 `Owned`，调用其 `borrow() `方法，获得引用
 
 
 
-虽然 Cow 是一个 enum，但是通过 Deref 的实现，我们可以获得统一的体验，比如 Cow，使用的感觉和 &str / String 是基本一致的。注意，这种根据 enum 的不同状态来进行统一分发的方法是第三种分发手段（前两种是可以使用泛型参数做静态分发和使用 trait object 做动态分发）。
+虽然 `Cow` 是一个 `enum`，但是通过 `Deref` 的实现，我们可以获得统一的体验，比如 `Cow`，使用的感觉和 `&str / String` 是基本一致的。注意，这种根据 `enum` 的不同状态来进行统一分发的方法是第三种分发手段（前两种是可以使用泛型参数做静态分发和使用 `trait object` 做动态分发）。
 
 
 
 **Cow 的作用和使用场景**
 
-* Cow 可以在需要时才进行内存的分配和拷贝，在很多应用场合，它可以大大提升系统的效率
+* `Cow` 可以在需要时才进行内存的分配和拷贝，在很多应用场合，它可以大大提升系统的效率
 
-* 如果 Cow<'a, B> 中的 Owned 数据类型是一个需要在堆上分配内存的类型，如 String、Vec 等，还能减少堆内存分配的次数
+* 如果 `Cow<'a, B>` 中的 `Owned` 数据类型是一个需要在堆上分配内存的类型，如 `String、Vec` 等，还能减少堆内存分配的次数
 
   > 因为相对于栈内存的分配释放来说，堆内存的分配和释放效率要低很多，其内部还涉及系统调用和锁，减少不必要的堆内存分配是提升系统效率的关键手段。
 
 
 
-需求场景：在解析 URL 时，经常需要将 querystring 中的参数，提取成 KV pair 来进一步使用。绝大多数语言中，提取出来的 KV 都是新的字符串，在每秒钟处理几十 k 甚至上百 k 请求的系统中，这会导致带来了很多次堆内存的分配
+需求场景：在解析 `URL` 时，经常需要将 `querystring` 中的参数，提取成 `KV pair` 来进一步使用。绝大多数语言中，提取出来的 `KV` 都是新的字符串，在每秒钟处理几十 k 甚至上百 k 请求的系统中，这会导致带来了很多次堆内存的分配。
 
+解决方案：在 `Rust` 中，可以用 `Cow` 类型轻松高效处理它，在读取 URL 的过程中：
 
-
-解决方案：在 Rust 中，可以用 Cow 类型轻松高效处理它，在读取 URL 的过程中：
-
-* 每解析出一个 key 或者 value，可以用一个 &str 指向 URL 中相应的位置，然后用 Cow 封装它
-* 而当解析出来的内容不能直接使用，需要 decode 时，比如 “hello%20world”，可以生成一个解析后的 String，同样用 Cow 封装它
+* 每解析出一个 `key` 或者 `value`，可以用一个 `&str` 指向 `URL` 中相应的位置，然后用 `Cow` 封装它
+* 而当解析出来的内容不能直接使用，需要 `decode` 时，比如 “hello%20world”，可以生成一个解析后的 `String`，同样用 `Cow` 封装它
 
 > 代码可见[这里](https://github.com/sinkhaha/rust-study-demo/blob/main/smart-point/src/cow1.rs)
 
@@ -459,7 +455,7 @@ fn show_cow(cow: Cow<str>) -> String {
 }
 ```
 
-类似 URL parse 这样的处理方式，在 Rust 标准库和第三方库中很常见。比如 [serde](https://serde.rs/) 库，可以非常高效地对 Rust 数据结构，进行序列化 / 反序列化操作，它对 Cow 就有很好的支持。例如下面的代码将一个 JSON 数据反序列化成 User 类型，同时让 User 中的 name 使用 Cow 来引用 JSON 文本中的内容
+类似 `URL parse` 这样的处理方式，在 `Rust` 标准库和第三方库中很常见。比如 [serde](https://serde.rs/) 库，可以非常高效地对 `Rust` 数据结构，进行序列化 / 反序列化操作，它对 `Cow` 就有很好的支持。例如下面的代码将一个 `JSON` 数据反序列化成 `User` 类型，同时让 `User` 中的 `name` 使用 `Cow` 来引用 `JSON` 文本中的内容
 
 > 代码可见[这里](https://github.com/sinkhaha/rust-study-demo/blob/main/smart-point/src/cow2.rs)
 
@@ -490,13 +486,13 @@ fn main() {
 
 
 
-## `MutexGuard<T>`
+## 2.3 `MutexGuard<T>`
 
-`MutexGuard<T>` 也是智能指针，它可以通过 Deref 来提供良好的用户体验，还通过 Drop trait 来确保使用到的内存以外的资源在退出时进行释放。
+`MutexGuard<T>` 也是智能指针，它可以通过 `Deref` 来提供良好的用户体验，还通过 `Drop trait` 来确保使用到的内存以外的资源在退出时进行释放。
 
 
 
-MutexGuard 这个结构是在调用 [Mutex::lock](https://doc.rust-lang.org/src/std/sync/mutex.rs.html#279-284) 时生成的：
+`MutexGuard` 这个结构是在调用 [Mutex::lock](https://doc.rust-lang.org/src/std/sync/mutex.rs.html#279-284) 时生成的：
 
 ```rust
 pub fn lock(&self) -> LockResult<MutexGuard<'_, T>> {
@@ -507,11 +503,11 @@ pub fn lock(&self) -> LockResult<MutexGuard<'_, T>> {
 }
 ```
 
-首先，它会取得锁资源，如果拿不到，会在这里等待；如果拿到了，会把 Mutex 结构的引用传递给 MutexGuard。
+首先，它会取得锁资源，如果拿不到，会在这里等待；如果拿到了，会把 `Mutex` 结构的引用传递给 `MutexGuard`。
 
 
 
- [MutexGuard 的定义](https://doc.rust-lang.org/src/std/sync/mutex.rs.html#190-195) 以及它的 Deref 和 Drop 的[实现](https://doc.rust-lang.org/src/std/sync/mutex.rs.html#462-487)：
+ [MutexGuard 的定义](https://doc.rust-lang.org/src/std/sync/mutex.rs.html#190-195) 以及它的 `Deref` 和 `Drop` 的[实现](https://doc.rust-lang.org/src/std/sync/mutex.rs.html#462-487)：
 
 ```rust
 // 这里用 must_use，当你得到了却不使用 MutexGuard 时会报警
@@ -546,19 +542,17 @@ impl<T: ?Sized> Drop for MutexGuard<'_, T> {
 }
 ```
 
-当 MutexGuard 结束时，Mutex 会做 unlock，这样用户在使用 Mutex 时，可以不必关心何时释放这个互斥锁。因为无论你在调用栈上怎样传递 MutexGuard ，哪怕在错误处理流程上提前退出，Rust 有所有权机制，可以确保只要 MutexGuard 离开作用域，锁就会被释放。
+当 `MutexGuard` 结束时，`Mutex` 会做 `unlock`，这样用户在使用 `Mutex` 时，可以不必关心何时释放这个互斥锁。因为无论你在调用栈上怎样传递 `MutexGuard` ，哪怕在错误处理流程上提前退出，`Rust` 有所有权机制，可以确保只要 `MutexGuard` 离开作用域，锁就会被释放。
 
 
 
-MutexGuard 不允许 Send，只允许 Sync，也就是可以把 MutexGuard 的引用传给另一个线程使用，但无法把 MutexGuard 整个移动到另一个线程。
+`MutexGuard` 不允许 `Send`，只允许 `Sync`，也就是可以把 `MutexGuard` 的引用传给另一个线程使用，但无法把 `MutexGuard` 整个移动到另一个线程。
 
 
 
-**使用场景**
+**例子**
 
-下面来看一个使用 Mutex 和 MutexGuard 的例子
-
-> 代码可见[这里](https://github.com/sinkhaha/rust-study-demo/blob/main/smart-point/src/guard.rs)
+下面来看一个使用 `Mutex` 和 `MutexGuard` 的例子，代码可见[这里](https://github.com/sinkhaha/rust-study-demo/blob/main/smart-point/src/guard.rs)
 
 ```rust
 use lazy_static::lazy_static;
@@ -602,23 +596,23 @@ fn main() {
 }
 ```
 
-类似 MutexGuard 的智能指针有很多用途。比如要创建一个连接池，你可以在 Drop trait 中，回收 checkout 出来的连接，将其再放回连接池。具体可以看看 [r2d2](https://github.com/sfackler/r2d2/blob/master/src/lib.rs#L611) 的实现，它是 Rust 下一个数据库连接池的实现。
+类似 `MutexGuard` 的智能指针有很多用途。比如要创建一个连接池，你可以在 `Drop trait` 中，回收 `checkout `出来的连接，将其再放回连接池。具体可以看看 [r2d2](https://github.com/sfackler/r2d2/blob/master/src/lib.rs#L611) 的实现，它是 `Rust` 下一个数据库连接池的实现。
 
 
 
-## Rc 和 Arc
+## 2.4 Rc 和 Arc
 
-Rc 和 Arc 是引用计数智能指针，用于实现共享所有权。具体可见之前的[另一篇文章](https://zhuanlan.zhihu.com/p/603465225)
-
-
-
-# 实现自己的智能指针
-
-Rust 下 String 在栈上占了 24 个字节，然后在堆上存放字符串实际的内容，对于一些比较短的字符串，这很浪费内存。有没有办法在字符串长到一定程度后，才使用标准的字符串呢？
+`Rc` 和 `Arc` 是引用计数智能指针，用于实现共享所有权。具体可见之前的[另一篇文章](https://zhuanlan.zhihu.com/p/603465225)
 
 
 
-参考 Cow，可以用一个 enum 来处理：当字符串小于 N 字节时，直接用栈上的数组，否则，使用 String。但是这个 N 不宜太大，否则当使用 String 时，会比目前的版本浪费内存。
+# 3 实现自己的智能指针
+
+`Rust` 下 `String` 在栈上占了 24 个字节，然后在堆上存放字符串实际的内容，对于一些比较短的字符串，这很浪费内存。有没有办法在字符串长到一定程度后，才使用标准的字符串呢？
+
+
+
+参考 `Cow`，可以用一个 `enum` 来处理：当字符串小于 N 字节时，直接用栈上的数组，否则，使用 `String`。但是这个 N 不宜太大，否则当使用 `String` 时，会比目前的版本浪费内存。
 
 
 
@@ -754,7 +748,7 @@ fn main() {
 
 
 
-# 参考
+# 4 参考
 
 * [陈天 · Rust 编程第一课-智能指针](https://time.geekbang.org/column/article/422182)
 
