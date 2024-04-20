@@ -10,13 +10,12 @@
 * 在线运行rust代码 https://play.rust-lang.org/
 * Rust小练习 https://github.com/rust-lang/rustlings
 * Rust博客 https://github.com/rust-lang/this-week-in-rust
-* rust杂志 https://github.com/RustMagazine/rust_magazine_2021
+* Rust杂志 https://github.com/RustMagazine/rust_magazine_2021
 * 微软的Rust培训课程 https://www.youtube.com/playlist?list=PLlrxD0HtieHjbTjrchBwOVks_sr8EVW1x
 
 ## 目录信息
 docs目录存放笔记，笔记同步发布在[知乎专栏](https://www.zhihu.com/column/c_1585046315616186368)中，其余是代码目录
 
-
-**参考:**
+## 参考
 * 陈天-《Rust编程第一课》
 * 《Rust程序设计》
